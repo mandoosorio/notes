@@ -1,4 +1,4 @@
-# AWS Configuration
+# AWS Configuration w/ Auth
 
 ## Create react app and connect to aws amplify
 -since client folder was created, some scripts have to be configured in the aws build settings:
