@@ -1,70 +1,118 @@
-# Getting Started with Create React App
+# AWS Configuration
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Create react app and connect to aws amplify
+-since client folder was created, some scripts have to be configured in the aws build settings:
 
-## Available Scripts
+```
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands: [npm run devInstall]
+    # IMPORTANT - Please verify your build commands
+    build:
+      commands: [npm run build]
+  artifacts:
+    # IMPORTANT - Please verify your build output directory
+    baseDirectory: client/build
+    files:
+      - '**/*'
+  cache:
+    paths: [node_modules]
+```
 
-In the project directory, you can run:
+## Configure aws amplify cli:
+```
+npm install -g @aws-amplify/cli
+amplify configure
+```
+you will create an IAM user, save both keys
 
-### `npm start`
+## AWS Amplify Console Backend
+-in the console, go to Backend Environments and clik on get started
+-click open admin UI/launch studio
+-go back to backend environment, click on local setup instructions, and copy the command and paste in your terminal
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Add Authentication
+```
+npm install aws-amplify @aws-amplify/ui-react
+amplify add auth
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+? Do you want to use the default authentication and security configuration? Default configuration
+? How do you want users to be able to sign in? Username
+? Do you want to configure advanced settings? No, I am done.
 
-### `npm test`
+amplify push --y
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+-add the following to src/index.js
+```
+import Amplify from 'aws-amplify';
+import config from './aws-exports';
+Amplify.configure(config);
+```
 
-### `npm run build`
+-Add the fololowing to the build settings in aws
+```
+backend:
+  phases:
+    build:
+      commands:
+        - '# Execute Amplify CLI with the helper script'
+        - amplifyPush --simple
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Backend/Amplify Configurations
+-amplify had trouble deploying the backend since the amplify folder was outside of the react project directory, easiest setup is to configure aws directly inside of the client folder and update build settings: 
+```
+version: 1
+env:
+    variables: 
+        VERSION_AMPLIFY: 9.1.0
+backend:
+  phases:
+    preBuild:
+      commands:
+        - npm i -g @aws-amplify/cli@${VERSION_AMPLIFY}
+    build:
+      commands:
+        - '# Execute Amplify CLI with the helper script'
+        - amplifyPush --simple
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Adding GraphQL API and Database
+```
+amplify add api
+```
+push changes to amplify and redeploy app
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Add Storage
+```
+amplify add storage
+amplify push --y
+```
 
-### `npm run eject`
+## Removing Resources/Services
+```
+amplify remove auth
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- to delete the entire project:
+```
+amplify delete
+```
